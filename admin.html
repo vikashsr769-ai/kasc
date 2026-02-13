@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Core – Faculty Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#0f1111;
+  --panel:#161b1b;
+  --panel-soft:#232f3e;
+  --border:#2e3b4e;
+  --text:#ffffff;
+  --muted:#b0b7bd;
+  --accent:#f6ff00;
+  --danger:#ff0000;
+  --radius:12px;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Amazon Ember","Segoe UI",Arial,sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  display:grid;
+  grid-template-columns:240px 1fr;
+  min-height:100vh;
+  transition: all 0.3s ease;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  background:#131921;
+  padding:28px 20px;
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  transition: transform 0.3s ease;
+}
+.brand{
+  font-size:22px;
+  font-weight:800;
+  color:var(--accent);
+  margin-bottom:40px;
+}
+.nav a{
+  display:block;
+  padding:14px 18px;
+  border-radius:8px;
+  color:var(--muted);
+  text-decoration:none;
+  margin-bottom:6px;
+}
+.nav a.active,
+.nav a:hover{
+  background:var(--panel-soft);
+  color:#fff;
+}
+
+/* ===== OVERLAY for mobile ===== */
+.overlay{
+  position: fixed;
+  inset:0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  z-index: 999;
+}
+.overlay.show { display: block; }
+
+/* ===== HEADER ===== */
+.header{
+  position:sticky;
+  top:0;
+  background:#0f1111;
+  border-bottom:1px solid var(--border);
+  padding:24px 40px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  z-index:5;
+}
+.header h1{font-size:30px}
+.header button{margin-top:8px;}
+
+/* ===== CONTENT ===== */
+.content{padding:40px}
+
+/* ===== CONTROLS ===== */
+.controls{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.controls input,
+.controls select{
+  padding:12px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:#fff;
+  flex:1;
+}
+
+/* ===== TABLE ===== */
+.table-wrapper{
+  display:grid;
+  gap:14px;
+}
+.table-row{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1.2fr 1.5fr 1.4fr auto;
+  gap:10px;
+  align-items:center;
+  animation:rowIn .4s ease forwards;
+}
+@keyframes rowIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.table-row:hover{
+  border-color:var(--accent);
+  transform:translateY(-2px);
+}
+.cell-title{font-size:11px;color:var(--muted)}
+.cell-value{font-size:15px}
+
+/* ===== BUTTONS ===== */
+.action-btn{
+  background:var(--accent);
+  border:none;
+  color:#111;
+  padding:8px 14px;
+  border-radius:6px;
+  font-weight:700;
+  cursor:pointer;
+}
+.action-btn.danger{
+  background:var(--danger);
+  color:#fff;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}#menuToggle{
+  display:none;
+  font-size:24px;
+  background:none;
+  border:none;
+  color:var(--accent);
+  cursor:pointer;
+}
+.modal{
+  width:520px;
+  max-width:95%;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:30px;
+}
+.modal label{font-size:12px;color:var(--muted)}
+.modal input,.modal select{
+  width:100%;
+  padding:12px;
+  margin:8px 0 18px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:#fff;
+}
+.modal-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1200px){
+  #menuToggle{display:inline-block;}
+  body{grid-template-columns:1fr;}
+  .sidebar{
+    position:fixed; top:0; left:0; height:100vh; z-index:1000; transform:translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.show{transform:translateX(0);}
+}
+@media(max-width:900px){
+  .header{padding:16px 20px;}
+  .header h1{font-size:22px;}
+  .controls input, .controls select{flex:1 1 100%;}
+  .table-row{grid-template-columns:1fr; display:flex; flex-direction:column; padding:10px;}
+  .table-row > div{padding:4px 0; width:100%;}
+  .cell-title{display:block;}
+}
+@media(max-width:450px){
+  .header{flex-direction:column; align-items:flex-start; gap:10px;}
+  .action-btn{width:100%; padding:12px; margin-top:4px;}
+  .controls{flex-direction:column; gap:10px;}
+  .modal{width:95%; padding:15px;}
+}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">ADMIN•CORE</div>
+  <nav class="nav">
+    <a class="active" href="admin.html">Faculty Management</a>
+  </nav>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="main">
+  <div class="header">
+    <button id="menuToggle">☰</button>
+    <h1>Faculty Profile Management</h1>
+    <div>
+      <button class="action-btn" onclick="openNew()">+ Add Faculty</button>
+      <button class="action-btn danger" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- SEARCH + SORT -->
+    <div class="controls">
+      <input placeholder="Search faculty…" oninput="search(this.value)">
+      <select onchange="sortByDepartment(this.value)">
+        <option value="">Sort by Department</option>
+        <option value="az">Department A → Z</option>
+        <option value="za">Department Z → A</option>
+      </select>
+    </div>
+
+    <div class="table-wrapper" id="list"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="modal_title">Edit Faculty</h2>
+
+    <label>Name</label><input id="d_name">
+    <label>Role</label>
+    <select id="d_role"><option>Admin</option><option>Faculty</option></select>
+    <label>Professor</label>
+    <select id="d_professor"><option>Assistant Professor</option><option>Associate Professor</option></select>
+    <label>Department</label>
+    <select id="d_department">
+      <option>Department of Computer Science (SF)</option>
+      <option>Department of Tamil (SF)</option>
+    </select>
+    <label>Email</label><input id="d_email">
+    <label>Password</label><input id="d_password" type="password">
+
+    <div class="modal-actions">
+      <button class="action-btn" onclick="save()">Save</button>
+      <button class="action-btn danger" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase1=supabase.createClient(
+  "https://fwqcfitjxcopbbedsyzd.supabase.co",
+  "sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7"
+);
+
+// Sidebar toggle for mobile
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+document.getElementById('menuToggle').addEventListener('click', ()=>{
+  sidebar.classList.add('show'); overlay.classList.add('show');
+});
+overlay.addEventListener('click', ()=>{
+  sidebar.classList.remove('show'); overlay.classList.remove('show');
+});
+
+let users=[],filtered=[],current=null,isNew=false;
+
+async function fetchData(){
+  const {data}=await supabase1.from("FacultyAuth").select("*");
+  users=data||[];
+  filtered=[...users];
+  render();
+}
+
+function render(){
+  const list = document.getElementById('list');
+  list.innerHTML="";
+  filtered.forEach((u,i)=>{
+    list.innerHTML+=`
+      <div class="table-row">
+        <div><div class="cell-title">Name</div><div class="cell-value">${u.Name}</div></div>
+        <div><div class="cell-title">Role</div><div class="cell-value">${u.Role}</div></div>
+        <div><div class="cell-title">Professor</div><div class="cell-value">${u.Professor}</div></div>
+        <div><div class="cell-title">Department</div><div class="cell-value">${u.Department}</div></div>
+        <div><div class="cell-title">Email</div><div class="cell-value">${u.Email}</div></div>
+        <div>
+          <button class="action-btn" onclick="edit(${i})">Edit</button>
+          <button class="action-btn danger" onclick="delUser('${u.Email}')">Delete</button>
+        </div>
+      </div>`;
+  });
+}
+
+function search(q){
+  q=q.toLowerCase();
+  filtered=users.filter(u =>
+    u.Name.toLowerCase().includes(q) ||
+    u.Email.toLowerCase().includes(q)
+  );
+  render();
+}
+
+function sortByDepartment(type){
+  if(type==="az"){filtered.sort((a,b)=>a.Department.localeCompare(b.Department));}
+  else if(type==="za"){filtered.sort((a,b)=>b.Department.localeCompare(a.Department));}
+  render();
+}
+
+function openNew(){
+  isNew=true;
+  modal_title.innerText="Add Faculty";
+  d_name.value=d_email.value=d_password.value="";
+  modal.style.display="flex";
+}
+
+function edit(i){
+  isNew=false;
+  current=filtered[i];
+  modal_title.innerText="Edit Faculty";
+  d_name.value=current.Name;
+  d_role.value=current.Role;
+  d_professor.value=current.Professor;
+  d_department.value=current.Department;
+  d_email.value=current.Email;
+  d_password.value=current.Password;
+  modal.style.display="flex";
+}
+
+async function save(){
+  const payload={
+    Name:d_name.value,
+    Role:d_role.value,
+    Professor:d_professor.value,
+    Department:d_department.value,
+    Email:d_email.value,
+    Password:d_password.value
+  };
+  isNew
+    ? await supabase1.from("FacultyAuth").insert([payload])
+    : await supabase1.from("FacultyAuth").update(payload).eq("id",current.id);
+  closeModal();fetchData();
+}
+
+async function delUser(email){
+  if(confirm("Delete faculty?")){
+    await supabase1.from("FacultyAuth").delete().eq("Email",email);
+    fetchData();
+  }
+}
+
+function closeModal(e){if(!e||e.target===modal) modal.style.display="none";}
+function logout(){sessionStorage.clear(); location.href="index.html";}
+
+fetchData();
+</script>
+
+</body>
+</html>
