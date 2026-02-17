@@ -3,30 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Responsive Login</title>
+<title>Advanced Attendance Monitoring Dashboard System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
-var SUPABASE_URL ;
-var SUPABASE_KEY ;
-
-SUPABASE_URL="https://fwqcfitjxcopbbedsyzd.supabase.co";
-SUPABASE_KEY="sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7";
-
+/* ================= SUPABASE CONFIG ================= */
+const SUPABASE_URL = "https://fwqcfitjxcopbbedsyzd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7";
 const supabase1 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function Lg() {
-  const jEmail = document.getElementById('email').value;
-  const jPass = document.getElementById('pass').value;
-  const alertBox = document.getElementById('alert');
-
+/* ================= ADMIN / FACULTY LOGIN ================= */
+async function LgFaculty() {
+  const email = document.getElementById('facultyEmail').value.trim();
+  const password = document.getElementById('facultyPass').value.trim();
+  const alertBox = document.getElementById('facultyAlert');
   alertBox.textContent = "";
+
+  if (!email || !password) {
+    alertBox.textContent = "Please enter Email and Password!";
+    return;
+  }
 
   const { data, error } = await supabase1
     .from('FacultyAuth')
-    .select()
-    .eq('Email', jEmail)
+    .select('Name, Email, Password, Department, Professor, Role')
+    .eq('Email', email)
     .maybeSingle();
 
   if (error) {
@@ -39,13 +41,61 @@ async function Lg() {
     return;
   }
 
-  if (data.Password === jPass) {
-    sessionStorage.setItem("Email", data.Email);
+  if (data.Password === password) {
+    // Store faculty data in sessionStorage
+    sessionStorage.setItem("FacultyName", data.Name);
+    sessionStorage.setItem("FacultyEmail", data.Email);      // <-- Faculty email stored here
+    sessionStorage.setItem("FacultyDepartment", data.Department);
     sessionStorage.setItem("Professor", data.Professor);
-     sessionStorage.setItem("FacultyName", data.Name);
-      sessionStorage.setItem("FacultyDepartment", data.Department);
-    window.location.href =
-      data.Role === 'Admin' ? "admin.html" : "faculty.html";
+    sessionStorage.setItem("FacultyRole", data.Role);
+
+    // Redirect based on role
+    if (data.Role === "Admin") {
+      window.location.href = "admin.html";
+    } else {
+      window.location.href = "faculty.html";
+    }
+  } else {
+    alertBox.textContent = "Invalid Credentials!";
+  }
+}
+
+/* ================= STUDENT LOGIN ================= */
+async function LgStudent() {
+  const roll = document.getElementById('studentRoll').value.trim();
+  const password = document.getElementById('studentPass').value.trim();
+  const alertBox = document.getElementById('studentAlert');
+  alertBox.textContent = "";
+
+  if (!roll || !password) {
+    alertBox.textContent = "Please enter Roll No and Password!";
+    return;
+  }
+
+  const { data, error } = await supabase1
+    .from('StudentAuth')
+    .select('Name, RollNo, Password, Class, Department,FacultyEmail')
+    .eq('RollNo', roll)
+    .maybeSingle();
+
+  if (error) {
+    alertBox.textContent = error.message;
+    return;
+  }
+
+  if (!data) {
+    alertBox.textContent = "Roll No not found!";
+    return;
+  }
+
+  if (data.Password === password) {
+    // Store student data in sessionStorage
+    sessionStorage.setItem("StudentName", data.Name);
+    sessionStorage.setItem("StudentRoll", data.RollNo);
+    sessionStorage.setItem("FacultyEmail", data.FacultyEmail);
+    sessionStorage.setItem("StudentDepartment", data.Department);
+
+    window.location.href = "StudentPerformance.html";
   } else {
     alertBox.textContent = "Invalid Credentials!";
   }
@@ -53,77 +103,45 @@ async function Lg() {
 </script>
 
 <style>
+/* ================= GLOBAL STYLES ================= */
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+    margin:0; padding:0; box-sizing:border-box;
     font-family:'Segoe UI', sans-serif;
 }
 
-html,body{
+html, body{
     height:100%;
-    overflow:hidden;
+    background-color:#8800aa;
 }
 
-/* VIDEO BACKGROUND */
-#bg-video{
-    position:fixed;
-    top:0;
-    left:0;
+/* Header */
+.header{
     width:100%;
-    height:100%;
-    object-fit:cover;
-    object-position:center;
-    z-index:-2;
+    padding:25px 10px;
+    text-align:center;
+    background:#8800aa;
 }
 
-/* DARK OVERLAY */
-.overlay{
-    position:fixed;
-    inset:0;
-    background:linear-gradient(
-        rgba(0,0,0,0.4)
-    );
-    z-index:-1;
+.header h1{
+    color:#f6ff00;
+    font-size:32px;
+    font-weight:800;
+    letter-spacing:3px;
+    text-shadow:4px 4px #000;
 }
 
-.banner{
-    position: fixed;
-    top: 40%;
-    left: 35%;              /* slightly left of center */
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 1;
-}
-
-.banner h1{
-    color: #f6ff00;
-    font-size: 50px;        /* big font */
-    font-weight: 800;
-    margin: 0; 
-    letter-spacing: 3px; text-shadow: 7px 7px #000;
-}
-.banner p{
-    color: #fff;
-    font-size: 20px;        /* big font */
-    font-weight: 400;
-    margin-left:15%;
-    letter-spacing: 3px;
-}
-
-
-
-
-/* CENTER CONTAINER */
+/* Container */
 .container{
-    height:100%;
+    min-height:calc(100vh - 100px);
     display:flex;
-    justify-content:right;
+    justify-content:center;
     align-items:center;
+    gap:60px;
     padding:20px;
+    flex-wrap:wrap;
 }
 
-/* GLASS LOGIN CARD */
+/* Login box */
 .login-box{
     width:420px;
     max-width:100%;
@@ -145,10 +163,9 @@ html,body{
     text-align:center;
     margin-bottom:30px;
     color:#f6ff00;
-    letter-spacing:1px;
 }
 
-/* FLOATING INPUTS */
+/* Fields */
 .field{
     position:relative;
     margin-bottom:22px;
@@ -182,7 +199,7 @@ html,body{
     color:#f6ff00;
 }
 
-/* LOGIN BUTTON */
+/* Button */
 .login-btn{
     width:100%;
     padding:14px;
@@ -195,7 +212,6 @@ html,body{
     font-weight:700;
     cursor:pointer;
     transition:0.3s;
-    min-height:48px;
 }
 
 .login-btn:hover{
@@ -203,8 +219,8 @@ html,body{
     transform:translateY(-2px);
 }
 
-/* ALERT MESSAGE */
-#alert{
+/* Alerts */
+.alert{
     margin-top:18px;
     text-align:center;
     color:#f6ff00;
@@ -212,7 +228,7 @@ html,body{
     min-height:20px;
 }
 
-/* FOOTER */
+/* Footer */
 .footer{
     text-align:center;
     margin-top:25px;
@@ -220,81 +236,57 @@ html,body{
     font-size:13px;
 }
 
-/* ======================
-   RESPONSIVE DESIGN
-   ====================== */
-
-@media (max-width: 768px){
-    .login-box{
-        padding:35px 30px;
-    }
-   
+/* Responsive */
+@media (max-width: 900px){
+    .container{flex-direction:column; gap:40px;}
 }
 
 @media (max-width: 480px){
- .banner{top:15%;left:50%;
-           }.banner h1{font-size:25px;}
-    .login-box{
-        width:100%;
-        padding:30px 22px;
-        border-radius:14px;
-    }
-
-    .login-box h2{
-        font-size:22px;
-    }
-
-    .field input{
-        font-size:15px;
-        padding:12px 10px;
-    }
-
-    .login-btn{
-        font-size:15px;
-        padding:13px;
-    }
-
-    .footer{
-        font-size:12px;
-    }
+    .login-box{padding:30px 22px; border-radius:14px;}
 }
 </style>
 </head>
 
 <body>
 
-<!-- VIDEO BACKGROUND -->
-<video autoplay muted loop id="bg-video">
-    <source src="Attendance Revolution_ Tech Update.mp4" type="video/mp4">
-</video>
-
-<div class="overlay"></div>
- <div class="banner"> 
-  <h1>Smart Attendance <br>&<br> Parents Notification System</h1>
+<div class="header">
+    <h1>Advanced Attendance Monitoring Dashboard System</h1>
 </div>
-<div class="container">
-    <div class="login-box">
-        <h2>Login Here</h2>
 
+<div class="container">
+
+    <!-- Faculty Login -->
+    <div class="login-box">
+        <h2>Admin / Faculty</h2>
         <div class="field">
-            <input type="email" id="email" required>
+            <input type="email" id="facultyEmail" required>
             <label>Email Address</label>
         </div>
-
         <div class="field">
-            <input type="password" id="pass" required>
+            <input type="password" id="facultyPass" required>
             <label>Password</label>
         </div>
-
-        <button class="login-btn" onclick="Lg()">LOGIN</button>
-
-        <div id="alert"></div>
-
-        <div class="footer">
-            Satspans • Secure Access
-        </div>
+        <button class="login-btn" onclick="LgFaculty()">LOGIN</button>
+        <div id="facultyAlert" class="alert"></div>
+        <div class="footer">AAMDS • Secure Access</div>
     </div>
-</div>
 
+    <!-- Student Login -->
+    <div class="login-box">
+        <h2>Student</h2>
+        <div class="field">
+            <input type="text" id="studentRoll" required>
+            <label>Roll No</label>
+        </div>
+        <div class="field">
+            <input type="password" id="studentPass" required>
+            <label>Password</label>
+        </div>
+        <button class="login-btn" onclick="LgStudent()">LOGIN</button>
+        <div id="studentAlert" class="alert"></div>
+        <div class="footer">AAMDS • Secure Access</div>
+    </div>
+
+</div>
 </body>
 </html>

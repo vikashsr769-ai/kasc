@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Faculty – Student DB Management</title>
+<title>Faculty – Student Attendance</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
-  --bg:#0f1111;
+  --bg:#8800aa;
   --panel:#161b1b;
   --panel-soft:#232f3e;
   --border:#2e3b4e;
@@ -18,12 +18,7 @@
   --radius:12px;
 }
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:"Segoe UI",Arial,sans-serif;
-}
+*{ margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI",Arial,sans-serif; }
 
 body{
   background: var(--bg);
@@ -42,10 +37,7 @@ body{
   flex-direction:column;
   transition: transform 0.3s ease;
 }
-
-.sidebar.hide{
-  transform: translateX(-100%);
-}
+.sidebar.hide{ transform: translateX(-100%); }
 
 .brand{
   font-size: clamp(18px, 2vw, 22px);
@@ -63,12 +55,8 @@ body{
   font-size: clamp(14px, 1.2vw, 16px);
   margin-bottom:5px;
 }
-
 .nav a.active,
-.nav a:hover{
-  background: var(--panel-soft);
-  color:#fff;
-}
+.nav a:hover{ background: var(--panel-soft); color:#fff; }
 
 .header{
   position:sticky;
@@ -81,23 +69,10 @@ body{
   justify-content: space-between;
   align-items: center;
 }
+.header h1{ font-size: clamp(20px, 3vw, 30px); }
+#menuToggle{ display:none; font-size:24px; background:none; border:none; color:var(--accent); cursor:pointer; }
 
-.header h1{
-  font-size: clamp(20px, 3vw, 30px);
-}
-
-#menuToggle{
-  display:none;
-  font-size:24px;
-  background:none;
-  border:none;
-  color:var(--accent);
-  cursor:pointer;
-}
-
-.content{
-  padding: clamp(20px, 4vw, 40px);
-}
+.content{ padding: clamp(20px, 4vw, 40px); }
 
 .action-btn{
   background:var(--accent);
@@ -112,21 +87,16 @@ body{
   margin: 5px 0;
   font-size: clamp(14px, 1.2vw, 16px);
 }
+.action-btn.danger{ background: var(--danger); color:#fff; }
 
-.action-btn.danger{
-  background: var(--danger);
-  color:#fff;
-}
-
-select{
+select, input{
   width:100%;
-  padding:12px;
+  padding:10px;
   background: var(--panel);
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:6px;
   color:#fff;
   margin-bottom:14px;
-  font-size: 14px;
 }
 
 .table-row{
@@ -134,68 +104,31 @@ select{
   border:1px solid var(--border);
   border-radius:12px;
   padding:12px 16px;
-  display: grid;
-  grid-template-columns:1fr 1fr auto;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap:12px;
   margin-bottom:10px;
-  gap:8px;
+  align-items:center;
 }
 
-.status-btn,#smsLinks{
-  padding:6px 14px;
+.status-select{
+  padding:6px 10px;
   border-radius:6px;
   border:none;
   font-weight:700;
   cursor:pointer;
+  background:#232f3e;
+  color:#fff;
 }
 
-.present{background:#00ff88;color:#111}
-.absent{background:#ff4d4d;color:#fff}
-
-/* Responsive styles */
-@media (max-width: 2450px) {
+@media (max-width: 1800px){
   body{grid-template-columns:1fr;}
-  .sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    height:100vh;
-    z-index:1000;
-    transform:translateX(-100%);
-  }
+  .sidebar{position:fixed; top:0; left:0; height:100vh; z-index:1000; transform:translateX(-100%);}
   .sidebar.show{transform:translateX(0);}
   #menuToggle{display:inline-block;}
-  .overlay{
-    display:block;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:#00000080;
-    z-index:500;
-    display:none;
-  }
+  .overlay{ display:none; position:fixed; top:0; left:0;width:100%;height:100%;background:#00000080; z-index:500;}
   .overlay.show{display:block;}
-  .table-row{
-    grid-template-columns:1fr;
-    grid-template-rows:auto auto auto;
-    padding:12px;
-  }
-  .table-row button.status-btn{width:400px;}
-  select{font-size:14px;padding:10px;}
 }
-
-@media (max-width: 450px) {
-  .content{padding:15px;}
-  .action-btn{width:90%;padding:12px;}
-  .header h1{font-size:20px;}
-}
-
-form #attendanceForm{width:100%; max-width:400px;}
-
-button,select:hover {
-  border:1px solid #f6ff00;}
-
 </style>
 </head>
 
@@ -210,7 +143,6 @@ button,select:hover {
   </nav>
 </aside>
 
-<!-- Overlay for mobile -->
 <div class="overlay" id="overlay"></div>
 
 <div class="main">
@@ -221,10 +153,9 @@ button,select:hover {
   </div>
 
   <div class="content">
-
     <button class="action-btn" onclick="toggleAttendance()">+ Create New Attendance</button>
 
-    <form id="attendanceForm" style="display:none;margin-top:20px;">
+    <form id="attendanceForm" style="display:none; margin-top:20px;">
       <select id="dept" required>
         <option value="">Select Department</option>
         <option>Department of Computer Science (SF)</option>
@@ -246,165 +177,140 @@ button,select:hover {
         <option>Additional</option>
       </select>
 
+      <select id="dayOrder" required>
+        <option value="">Select Day Order</option>
+        <option>I</option>
+        <option>II</option>
+        <option>III</option>
+        <option>IV</option>
+        <option>V</option>
+        <option>VI</option>
+      </select>
+
+      <select id="session" required>
+        <option value="">Select Session</option>
+        <option>1st Session</option>
+        <option>2nd Session</option>
+        <option>3rd Session</option>
+        <option>4th Session</option>
+        <option>5th Session</option>
+      </select>
+
       <button class="action-btn" type="submit">Load Students</button>
     </form>
 
     <div id="studentList" style="margin-top:30px;"></div>
-<div id="smsLinks" style="margin-top:20px;"></div>
-<br>    
-    <button id="saveBtn" class="action-btn" style="display:none;margin-top:20px;" onclick="saveAttendance()">
-      Save Attendance
-    </button><br>
 
-
-    
+    <button id="saveBtn" class="action-btn" style="display:none;margin-top:20px;" onclick="saveAttendance()">Save Attendance</button>
 
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-const supabaseclient = supabase.createClient(
+const supabaseClient = supabase.createClient(
   "https://fwqcfitjxcopbbedsyzd.supabase.co",
   "sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7"
 );
 
-const facultyEmailFromSession = sessionStorage.getItem('Email') || '';
+// ✅ Correctly get FacultyEmail from sessionStorage
+let FacultyEmail = sessionStorage.getItem('FacultyEmail') || '';
 let attendanceData = [];
-var FacultyEmail = facultyEmailFromSession;
 
-function toggleAttendance(){
-  const form = document.getElementById("attendanceForm");
-  form.style.display = 'block';
-}
+// Toggle attendance form
+function toggleAttendance(){ document.getElementById("attendanceForm").style.display = 'block'; }
 
-// Sidebar toggle for mobile
+// Sidebar mobile
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('overlay');
 document.getElementById('menuToggle').addEventListener('click', ()=>{
-  sidebar.classList.add('show');
-  overlay.classList.add('show');
+  sidebar.classList.add('show'); overlay.classList.add('show');
 });
 overlay.addEventListener('click', ()=>{
-  sidebar.classList.remove('show');
-  overlay.classList.remove('show');
+  sidebar.classList.remove('show'); overlay.classList.remove('show');
 });
 
+// Load students from StudentAuth
 document.getElementById("attendanceForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
-
   const department = dept.value;
   const clsVal = cls.value;
   const section = sec.value;
+  const dayOrderVal = dayOrder.value;
+  const sessionVal = session.value;
 
-  const { data, error } = await supabaseclient
-    .from("StudentDB")
-    .select("*")
+  const { data, error } = await supabaseClient
+    .from("StudentAuth")
+    .select("Name, RollNo, Class, Department, Section")
     .eq("Department", department)
     .eq("Class", clsVal)
     .eq("Section", section);
 
-  if(error || data.length === 0){
+  if(error || !data || data.length === 0){
     alert("No students found");
     return;
   }
 
-  attendanceData = data.map(s => ({...s, status:"Present", FacultyEmail:FacultyEmail}));
+  attendanceData = data.map(s=>({
+    ...s,
+    FacultyEmail, // ✅ Add faculty email
+    DayOrder: dayOrderVal,
+    Session: sessionVal,
+    AttendanceStatus: "Present"
+  }));
+
   renderStudents();
 });
 
+// Render students with AttendanceStatus dropdown
 function renderStudents(){
   const container = document.getElementById("studentList");
   container.innerHTML = "";
-
   attendanceData.forEach((s,i)=>{
     container.innerHTML += `
       <div class="table-row">
-        ${s.Rollno} - ${s.Name} - ${s.status} - 
-        <button class="status-btn ${s.status==="Present"?"present":"absent"}"
-          onclick="toggleStatus(${i})">
-          ${s.status}
-        </button>
+        <div>${s.RollNo}</div>
+        <div>${s.Name}</div>
+        <div>
+          <select class="status-select" onchange="updateStatus(${i}, this.value)">
+            <option value="Present" ${s.AttendanceStatus==="Present"?"selected":""}>Present</option>
+            <option value="Absent" ${s.AttendanceStatus==="Absent"?"selected":""}>Absent</option>
+            <option value="OnDuty" ${s.AttendanceStatus==="OnDuty"?"selected":""}>OnDuty</option>
+          </select>
+        </div>
       </div>
     `;
   });
-
-  document.getElementById("saveBtn").style.display="inline-block";
+  document.getElementById("saveBtn").style.display = "inline-block";
 }
 
-function toggleStatus(i){
-  attendanceData[i].status =
-    attendanceData[i].status === "Present" ? "Absent" : "Present";
-  renderStudents();
-}
+// Update attendance status
+function updateStatus(index, value){ attendanceData[index].AttendanceStatus = value; }
 
+// Save attendance
 async function saveAttendance(){
   const records = attendanceData.map(s=>({
-    FacultyEmail:s.FacultyEmail,
-    Rollno:s.Rollno,
-    Attendance:s.status
+    FacultyEmail: s.FacultyEmail, // ✅ Use faculty email from sessionStorage
+    Name: s.Name,
+    RollNo: s.RollNo,
+    Date: new Date().toISOString().split('T')[0],
+    Class: s.Class,
+    Department: s.Department,
+    Section: s.Section,
+    DayOrder: s.DayOrder,
+    Session: s.Session,
+    AttendanceStatus: s.AttendanceStatus
   }));
 
-  const { error } = await supabaseclient.from("AttendanceDB").insert(records);
-
-  if(error){
-    alert("Error saving attendance");
-  }else{
-    alert("Attendance saved successfully");
-    document.getElementById("smsBtn").style.display="inline-block";
-  }
+  const { error } = await supabaseClient.from("AttendanceDB").insert(records);
+  if(error){ alert("Error saving attendance: " + error.message); }
+  else{ alert("Attendance saved successfully!"); }
 }
 
-async function sendParentSMS() {
-    const smsContainer = document.getElementById("smsLinks");
-    smsContainer.innerHTML = "";
-
-    const absentees = attendanceData.filter(s => s.status === "Absent");
-
-    if (absentees.length === 0) {
-        smsContainer.innerHTML = "<p>No absent students.</p>";
-        return;
-    }
-
-    const { data: parentsData, error } = await supabaseclient
-        .from("StudentDB")
-        .select("ParentsPhNo")
-        .in("Rollno", absentees.map(s => s.Rollno));
-
-    if (error || !parentsData || parentsData.length === 0) {
-        alert("Failed to fetch parents' phone numbers.");
-        return;
-    }
-
-    const parentNumbers = parentsData.map(p => p.ParentsPhNo).join(",");
-
-    const Faculty_Name = sessionStorage.getItem("FacultyName");
-    const Professor = sessionStorage.getItem("Professor");
-    const Faculty_Department = sessionStorage.getItem("FacultyDepartment");
-
-    const message = `
-Dear Parent,
-This is to inform you that your child was absent for today’s class.
-
-- ${Faculty_Name}, 
-${Professor},
-${Faculty_Department}, 
-Kongunadu Arts and Science College (Autonomous),
-GN Mills,
-Coimbatore - 641029`;
-
-    const smsLink = document.createElement("a");
-    smsLink.href = `sms:${parentNumbers}?body=${encodeURIComponent(message)}`;
-    smsLink.textContent = "Send SMS to all absent students' parents";
-    smsLink.style.display = "block";
-    smsLink.style.marginBottom = "10px";
-
-    smsContainer.appendChild(smsLink);
-}
-function logout(){sessionStorage.clear(); location.href="index.html";}
+// Logout
+function logout(){ sessionStorage.clear(); location.href="index.html"; }
 
 </script>
 
 </body>
 </html>
-

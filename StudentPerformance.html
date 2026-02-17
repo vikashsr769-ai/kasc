@@ -10,7 +10,7 @@
 
 <style>
 :root{
-  --bg:#0f1111;
+  --bg:#8800aa;
   --panel:#161b1b;
   --border:#2e3b4e;
   --text:#ffffff;
@@ -42,19 +42,6 @@ body{
   color:var(--accent);
   margin-bottom:40px;
 }
-.nav a{
-  display:block;
-  padding:12px 16px;
-  border-radius:8px;
-  color:var(--muted);
-  text-decoration:none;
-  margin-bottom:5px;
-}
-.nav a.active,
-.nav a:hover{
-  background:#232f3e;
-  color:#fff;
-}
 
 /* Header */
 .header{
@@ -83,16 +70,6 @@ body{
 
 .content{
   padding:40px;
-}
-
-input{
-  padding:10px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:8px;
-  color:#fff;
-  width:250px;
-  margin-right:10px;
 }
 
 /* Dashboard Cards */
@@ -162,7 +139,6 @@ canvas{
 <!-- Sidebar -->
 <aside class="sidebar">
   <div class="brand">Student Performance</div>
- 
 </aside>
 
 <div class="main">
@@ -173,19 +149,16 @@ canvas{
 
   <div class="content">
 
-    <h3>Enter Student Roll No</h3><br>
-    <input type="text" id="rollInput" placeholder="Enter Roll No">
-    <button class="action-btn" onclick="loadDashboard()">Submit</button>
-
     <div id="dashboardArea" style="display:none;">
 
       <div class="dashboard">
         <div class="card"><h3>Student Name</h3><p id="d_name"></p></div>
         <div class="card"><h3>Class</h3><p id="d_class"></p></div>
         <div class="card"><h3>Department</h3><p id="d_dept"></p></div>
-        <div class="card"><h3>Total Days</h3><p id="d_total"></p></div>
-        <div class="card"><h3>Present Days</h3><p id="d_present"></p></div>
-        <div class="card"><h3>Absent Days</h3><p id="d_absent"></p></div>
+        <div class="card"><h3>Total Sessions<br>(5 sessions / day)</h3><p id="d_total"></p></div>
+        <div class="card"><h3>Present Sessions</h3><p id="d_present"></p></div>
+        <div class="card"><h3>Absent Sessions</h3><p id="d_absent"></p></div>
+        <div class="card"><h3>On Duty</h3><p id="d_od"></p></div>
         <div class="card"><h3>Attendance %</h3><p id="d_percent"></p></div>
       </div>
 
@@ -211,65 +184,75 @@ const supabaseClient = supabase.createClient(
 
 let pieChart, barChart;
 
-async function loadDashboard(){
+// Get student info from sessionStorage
+const studentRoll = sessionStorage.getItem('StudentRoll');
+const facultyEmail = sessionStorage.getItem('FacultyEmail');
 
-  const roll = rollInput.value.trim();
-  if(!roll){ alert("Enter Roll No"); return; }
+async function loadDashboard() {
+  if(!studentRoll || !facultyEmail){
+    alert("StudentRoll or FacultyEmail not found. Please login again.");
+    return;
+  }
 
+  // Fetch student info from AttendanceDB
   const { data: student } = await supabaseClient
-    .from("StudentDB")
-    .select("*")
-    .eq("Rollno", roll)
+    .from("AttendanceDB")
+    .select("Name, Class, Department, Section")
+    .eq("RollNo", studentRoll)
+    .eq("FacultyEmail", facultyEmail)
     .maybeSingle();
 
-  if(!student){ alert("Student not found"); return; }
+  if(!student){
+    alert("Student not found for this faculty.");
+    return;
+  }
 
+  // Fetch attendance records
   const { data: attendance } = await supabaseClient
     .from("AttendanceDB")
-    .select("*")
-    .eq("Rollno", roll);
+    .select("AttendanceStatus")
+    .eq("RollNo", studentRoll);
 
-  if(!attendance || attendance.length===0){
+  if(!attendance || attendance.length === 0){
     alert("No attendance records");
     return;
   }
 
-  const present = attendance.filter(a=>a.Attendance==="Present").length;
-  const absent = attendance.filter(a=>a.Attendance==="Absent").length;
+  const present = attendance.filter(a => a.AttendanceStatus === "Present").length;
+  const absent = attendance.filter(a => a.AttendanceStatus === "Absent").length;
+  const onDuty = attendance.filter(a => a.AttendanceStatus === "OnDuty").length;
   const total = attendance.length;
-  const percent = ((present/total)*100).toFixed(2);
+  const percent = ((present / total) * 100).toFixed(2);
 
+  // Populate dashboard
   d_name.innerText = student.Name;
   d_class.innerText = student.Class;
   d_dept.innerText = student.Department;
   d_total.innerText = total;
   d_present.innerText = present;
   d_absent.innerText = absent;
+  d_od.innerText = onDuty;
   d_percent.innerText = percent + "%";
 
-  dashboardArea.style.display="block";
+  dashboardArea.style.display = "block";
 
-  if(percent < 75){
-    warningBox.style.display="block";
-  } else {
-    warningBox.style.display="none";
-  }
+  warningBox.style.display = (percent < 75) ? "block" : "none";
 
-  renderCharts(present, absent);
+  renderCharts(present, absent, onDuty);
 }
 
-function renderCharts(present, absent){
+function renderCharts(present, absent, onDuty){
 
   if(pieChart) pieChart.destroy();
   if(barChart) barChart.destroy();
 
-  pieChart = new Chart(pieChart=document.getElementById("pieChart"),{
+  pieChart = new Chart(document.getElementById("pieChart"),{
     type:'pie',
     data:{
-      labels:["Present","Absent"],
+      labels:["Present","Absent","On Duty"],
       datasets:[{
-        data:[present, absent],
-        backgroundColor:["#00ff88","#ff4d4d"]
+        data:[present, absent, onDuty],
+        backgroundColor:["#00ff88","#ff4d4d","#ffaa00"]
       }]
     }
   });
@@ -277,10 +260,10 @@ function renderCharts(present, absent){
   barChart = new Chart(document.getElementById("barChart"),{
     type:'bar',
     data:{
-      labels:["Present","Absent"],
+      labels:["Present","Absent","On Duty"],
       datasets:[{
-        data:[present, absent],
-        backgroundColor:["#00ff88","#ff4d4d"]
+        data:[present, absent, onDuty],
+        backgroundColor:["#00ff88","#ff4d4d","#ffaa00"]
       }]
     },
     options:{scales:{y:{beginAtZero:true}}}
@@ -291,6 +274,9 @@ function logout(){
   sessionStorage.clear();
   location.href="index.html";
 }
+
+// Automatically load dashboard on page load
+window.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
 
 </body>

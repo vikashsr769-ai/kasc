@@ -5,9 +5,11 @@
 <title>Admin Core – Faculty Management</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 <style>
 :root{
-  --bg:#0f1111;
+  --bg:#8800aa;
   --panel:#161b1b;
   --panel-soft:#232f3e;
   --border:#2e3b4e;
@@ -17,31 +19,18 @@
   --danger:#ff0000;
   --radius:12px;
 }
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:"Amazon Ember","Segoe UI",Arial,sans-serif;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",Arial;}
 body{
   background:var(--bg);
   color:var(--text);
   display:grid;
   grid-template-columns:240px 1fr;
   min-height:100vh;
-  transition: all 0.3s ease;
 }
-
-/* ===== SIDEBAR ===== */
 .sidebar{
   background:#131921;
   padding:28px 20px;
   border-right:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  transition: transform 0.3s ease;
 }
 .brand{
   font-size:22px;
@@ -55,25 +44,12 @@ body{
   border-radius:8px;
   color:var(--muted);
   text-decoration:none;
-  margin-bottom:6px;
 }
 .nav a.active,
 .nav a:hover{
   background:var(--panel-soft);
   color:#fff;
 }
-
-/* ===== OVERLAY for mobile ===== */
-.overlay{
-  position: fixed;
-  inset:0;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 999;
-}
-.overlay.show { display: block; }
-
-/* ===== HEADER ===== */
 .header{
   position:sticky;
   top:0;
@@ -83,21 +59,13 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  flex-wrap:wrap;
-  z-index:5;
 }
-.header h1{font-size:30px}
-.header button{margin-top:8px;}
-
-/* ===== CONTENT ===== */
 .content{padding:40px}
-
-/* ===== CONTROLS ===== */
 .controls{
   display:flex;
   gap:12px;
-  flex-wrap:wrap;
   margin-bottom:20px;
+  flex-wrap:wrap;
 }
 .controls input,
 .controls select{
@@ -108,35 +76,18 @@ body{
   color:#fff;
   flex:1;
 }
-
-/* ===== TABLE ===== */
-.table-wrapper{
-  display:grid;
-  gap:14px;
-}
 .table-row{
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:var(--radius);
   padding:20px;
   display:grid;
-  grid-template-columns:1.2fr 1fr 1.2fr 1.5fr 1.4fr auto;
+  grid-template-columns:1fr 1fr 1fr 1.2fr 1.3fr auto;
   gap:10px;
-  align-items:center;
-  animation:rowIn .4s ease forwards;
-}
-@keyframes rowIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
-.table-row:hover{
-  border-color:var(--accent);
-  transform:translateY(-2px);
+  margin-bottom:12px;
 }
 .cell-title{font-size:11px;color:var(--muted)}
 .cell-value{font-size:15px}
-
-/* ===== BUTTONS ===== */
 .action-btn{
   background:var(--accent);
   border:none;
@@ -150,8 +101,6 @@ body{
   background:var(--danger);
   color:#fff;
 }
-
-/* ===== MODAL ===== */
 .modal-overlay{
   position:fixed;
   inset:0;
@@ -159,14 +108,6 @@ body{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:100;
-}#menuToggle{
-  display:none;
-  font-size:24px;
-  background:none;
-  border:none;
-  color:var(--accent);
-  cursor:pointer;
 }
 .modal{
   width:520px;
@@ -186,53 +127,25 @@ body{
   border-radius:8px;
   color:#fff;
 }
-.modal-actions{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:1200px){
-  #menuToggle{display:inline-block;}
-  body{grid-template-columns:1fr;}
-  .sidebar{
-    position:fixed; top:0; left:0; height:100vh; z-index:1000; transform:translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-  .sidebar.show{transform:translateX(0);}
-}
+.modal-actions{display:flex;gap:12px;}
 @media(max-width:900px){
-  .header{padding:16px 20px;}
-  .header h1{font-size:22px;}
-  .controls input, .controls select{flex:1 1 100%;}
-  .table-row{grid-template-columns:1fr; display:flex; flex-direction:column; padding:10px;}
-  .table-row > div{padding:4px 0; width:100%;}
-  .cell-title{display:block;}
-}
-@media(max-width:450px){
-  .header{flex-direction:column; align-items:flex-start; gap:10px;}
-  .action-btn{width:100%; padding:12px; margin-top:4px;}
-  .controls{flex-direction:column; gap:10px;}
-  .modal{width:95%; padding:15px;}
+  body{grid-template-columns:1fr;}
+  .table-row{grid-template-columns:1fr;}
 }
 </style>
 </head>
 
 <body>
 
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar">
   <div class="brand">ADMIN•CORE</div>
   <nav class="nav">
-    <a class="active" href="admin.html">Faculty Management</a>
+    <a class="active" href="#">Faculty Management</a>
   </nav>
 </aside>
 
-<div class="overlay" id="overlay"></div>
-
-<div class="main">
+<div>
   <div class="header">
-    <button id="menuToggle">☰</button>
     <h1>Faculty Profile Management</h1>
     <div>
       <button class="action-btn" onclick="openNew()">+ Add Faculty</button>
@@ -241,7 +154,6 @@ body{
   </div>
 
   <div class="content">
-    <!-- SEARCH + SORT -->
     <div class="controls">
       <input placeholder="Search faculty…" oninput="search(this.value)">
       <select onchange="sortByDepartment(this.value)">
@@ -251,25 +163,67 @@ body{
       </select>
     </div>
 
-    <div class="table-wrapper" id="list"></div>
+    <div id="list"></div>
   </div>
 </div>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modal" onclick="closeModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2 id="modal_title">Edit Faculty</h2>
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal_title">Add Faculty</h2>
 
     <label>Name</label><input id="d_name">
     <label>Role</label>
-    <select id="d_role"><option>Admin</option><option>Faculty</option></select>
-    <label>Professor</label>
-    <select id="d_professor"><option>Assistant Professor</option><option>Associate Professor</option></select>
-    <label>Department</label>
-    <select id="d_department">
-      <option>Department of Computer Science (SF)</option>
-      <option>Department of Tamil (SF)</option>
+    <select id="d_role">
+      <option value="Faculty">Faculty</option>
+      <option value="Admin">Admin</option>
     </select>
+
+    <label>Professor</label>
+    <select id="d_professor">
+      <option>Assistant Professor</option>
+      <option>Associate Professor</option>
+    </select>
+
+    <label>Department</label> 
+<select id="d_department">
+<option value="">Select Department</option> 
+<option>Department of Tamil (AIDED)</option>
+<option>Department of English (AIDED)</option>
+<option>Department of Mathematics (AIDED)</option>
+<option>Department of Physics (AIDED)</option> 
+<option>Department of Chemistry (AIDED)</option>
+<option>Department of Botany (AIDED)</option>
+<option>Department of Zoology (AIDED)</option>
+<option>Department of Biochemistry (AIDED)</option>
+<option>Department of Computer Science (AIDED)</option>
+<option>Department of Tamil (SF)</option> 
+<option>Department of English (SF)</option> 
+<option>Department of Mathematics (SF)</option> 
+<option>Department of Biotechnology (SF)</option>
+<option>Department of Chemistry (PG) (SF)</option> 
+<option>Department of Commerce (SF)</option> 
+<option>Department of Commerce CA (SF)</option>
+<option>Department of Computer Science (SF)</option>
+<option>Department of Computer Technology (SF)</option>
+<option>Department of Computer Application (SF)</option>
+<option>Department of Costume Design and Fashion (SF)</option>
+<option>Department of Biochemistry (SF)</option> 
+<option>Department of Information Technology (SF)</option>
+<option>Department of Business Administration with CA (SF)</option>
+<option>Department of Commerce PA (SF)</option> 
+<option>Department of Commerce (PG) (SF)</option> 
+<option>Department of Commerce Banking & Insurance (SF)</option>
+<option>Department of Commerce Accounting and Finance (SF)</option> 
+<option>Department of Psychology (SF)</option>
+<option>Department of Computer Science with Data Analytics (SF)</option> 
+<option>Department of Artificial Intelligence and Machine Learning (SF)</option> 
+<option>Department of Commerce IT (SF)</option> 
+<option>Department of Commerce Business Analytics (SF)</option> 
+<option>Department of Clinical Nutrition (SF)</option>
+<option>Department of Wildlife Biology (SF)</option>
+</select>
+
     <label>Email</label><input id="d_email">
     <label>Password</label><input id="d_password" type="password">
 
@@ -280,42 +234,35 @@ body{
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-const supabase1=supabase.createClient(
+const supabase1 = supabase.createClient(
   "https://fwqcfitjxcopbbedsyzd.supabase.co",
   "sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7"
 );
 
-// Sidebar toggle for mobile
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-document.getElementById('menuToggle').addEventListener('click', ()=>{
-  sidebar.classList.add('show'); overlay.classList.add('show');
-});
-overlay.addEventListener('click', ()=>{
-  sidebar.classList.remove('show'); overlay.classList.remove('show');
-});
-
 let users=[],filtered=[],current=null,isNew=false;
 
 async function fetchData(){
-  const {data}=await supabase1.from("FacultyAuth").select("*");
+  const {data,error}=await supabase1
+    .from("FacultyAuth")
+    .select("*")
+    .order("created_at",{ascending:false});
+  if(error){alert(error.message);return;}
   users=data||[];
   filtered=[...users];
   render();
 }
 
 function render(){
-  const list = document.getElementById('list');
+  const list=document.getElementById("list");
   list.innerHTML="";
   filtered.forEach((u,i)=>{
     list.innerHTML+=`
       <div class="table-row">
         <div><div class="cell-title">Name</div><div class="cell-value">${u.Name}</div></div>
         <div><div class="cell-title">Role</div><div class="cell-value">${u.Role}</div></div>
-        <div><div class="cell-title">Professor</div><div class="cell-value">${u.Professor}</div></div>
-        <div><div class="cell-title">Department</div><div class="cell-value">${u.Department}</div></div>
+        <div><div class="cell-title">Professor</div><div class="cell-value">${u.Professor?"Yes":"No"}</div></div>
+        <div><div class="cell-title">Department</div><div class="cell-value">${u.Department||"-"}</div></div>
         <div><div class="cell-title">Email</div><div class="cell-value">${u.Email}</div></div>
         <div>
           <button class="action-btn" onclick="edit(${i})">Edit</button>
@@ -335,15 +282,18 @@ function search(q){
 }
 
 function sortByDepartment(type){
-  if(type==="az"){filtered.sort((a,b)=>a.Department.localeCompare(b.Department));}
-  else if(type==="za"){filtered.sort((a,b)=>b.Department.localeCompare(a.Department));}
+  if(type==="az") filtered.sort((a,b)=>(a.Department||"").localeCompare(b.Department||""));
+  if(type==="za") filtered.sort((a,b)=>(b.Department||"").localeCompare(a.Department||""));
   render();
 }
 
 function openNew(){
   isNew=true;
+  current=null;
   modal_title.innerText="Add Faculty";
-  d_name.value=d_email.value=d_password.value="";
+  d_name.value=d_email.value=d_password.value=d_department.value="";
+  d_role.value="Faculty";
+  d_professor.value="false";
   modal.style.display="flex";
 }
 
@@ -353,8 +303,8 @@ function edit(i){
   modal_title.innerText="Edit Faculty";
   d_name.value=current.Name;
   d_role.value=current.Role;
-  d_professor.value=current.Professor;
-  d_department.value=current.Department;
+  d_professor.value=current.Professor?"true":"false";
+  d_department.value=current.Department||"";
   d_email.value=current.Email;
   d_password.value=current.Password;
   modal.style.display="flex";
@@ -362,17 +312,24 @@ function edit(i){
 
 async function save(){
   const payload={
-    Name:d_name.value,
+    Name:d_name.value.trim(),
     Role:d_role.value,
-    Professor:d_professor.value,
+    Professor:d_professor.value==="true",
     Department:d_department.value,
-    Email:d_email.value,
-    Password:d_password.value
+    Email:d_email.value.trim(),
+    Password:d_password.value.trim()
   };
-  isNew
-    ? await supabase1.from("FacultyAuth").insert([payload])
-    : await supabase1.from("FacultyAuth").update(payload).eq("id",current.id);
-  closeModal();fetchData();
+  if(!payload.Name||!payload.Email||!payload.Password){
+    alert("Name, Email and Password required");
+    return;
+  }
+  if(isNew){
+    await supabase1.from("FacultyAuth").insert([payload]);
+  }else{
+    await supabase1.from("FacultyAuth").update(payload).eq("id",current.id);
+  }
+  closeModal();
+  fetchData();
 }
 
 async function delUser(email){
@@ -382,8 +339,8 @@ async function delUser(email){
   }
 }
 
-function closeModal(e){if(!e||e.target===modal) modal.style.display="none";}
-function logout(){sessionStorage.clear(); location.href="index.html";}
+function closeModal(){modal.style.display="none";}
+function logout(){sessionStorage.clear();location.href="index.html";}
 
 fetchData();
 </script>
