@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Attendance Monitoring Dashboard System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+/* ================= SUPABASE CONFIG ================= */
+const SUPABASE_URL = "https://fwqcfitjxcopbbedsyzd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7";
+const supabase1 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ================= ADMIN / FACULTY LOGIN ================= */
+async function LgFaculty() {
+  const email = document.getElementById('facultyEmail').value.trim();
+  const password = document.getElementById('facultyPass').value.trim();
+  const alertBox = document.getElementById('facultyAlert');
+  alertBox.textContent = "";
+
+  if (!email || !password) {
+    alertBox.textContent = "Please enter Email and Password!";
+    return;
+  }
+
+  const { data, error } = await supabase1
+    .from('FacultyAuth')
+    .select('Name, Email, Password, Department, Professor, Role')
+    .eq('Email', email)
+    .maybeSingle();
+
+  if (error) {
+    alertBox.textContent = error.message;
+    return;
+  }
+
+  if (!data) {
+    alertBox.textContent = "Email not found!";
+    return;
+  }
+
+  if (data.Password === password) {
+    // Store faculty data in sessionStorage
+    sessionStorage.setItem("FacultyName", data.Name);
+    sessionStorage.setItem("FacultyEmail", data.Email);      // <-- Faculty email stored here
+    sessionStorage.setItem("FacultyDepartment", data.Department);
+    sessionStorage.setItem("Professor", data.Professor);
+    sessionStorage.setItem("FacultyRole", data.Role);
+
+    // Redirect based on role
+    if (data.Role === "Admin") {
+      window.location.href = "admin.html";
+    } else {
+      window.location.href = "faculty.html";
+    }
+  } else {
+    alertBox.textContent = "Invalid Credentials!";
+  }
+}
+
+/* ================= STUDENT LOGIN ================= */
+async function LgStudent() {
+  const roll = document.getElementById('studentRoll').value.trim();
+  const password = document.getElementById('studentPass').value.trim();
+  const alertBox = document.getElementById('studentAlert');
+  alertBox.textContent = "";
+
+  if (!roll || !password) {
+    alertBox.textContent = "Please enter Roll No and Password!";
+    return;
+  }
+
+  const { data, error } = await supabase1
+    .from('StudentAuth')
+    .select('Name, RollNo, Password, Class, Department ,FacultyEmail')
+    .eq('RollNo', roll)
+    .maybeSingle();
+
+  if (error) {
+    alertBox.textContent = error.message;
+    return;
+  }
+
+  if (!data) {
+    alertBox.textContent = "Roll No not found!";
+    return;
+  }
+
+  if (data.Password === password) {
+    // Store student data in sessionStorage
+    sessionStorage.setItem("StudentName", data.Name);
+    sessionStorage.setItem("StudentRollNo", data.RollNo);
+    sessionStorage.setItem("FacultyEmails", data.FacultyEmail);
+    sessionStorage.setItem("StudentDepartment", data.Department);
+//alert( data.RollNo+" - "+data.FacultyEmail)
+    window.location.href = "StudentPerformance.html";
+  } else {
+    alertBox.textContent = "Invalid Credentials!";
+  }
+}
+</script>
+
+<style>
+/* ================= GLOBAL STYLES ================= */
+*{
+    margin:0; padding:0; box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+html, body{
+    height:100%;
+    background-image: url("bg.png");
+    background-repeat: no-repeat;
+    background-size:cover;
+}
+
+/* Header */
+.header{
+    width:100%;
+    padding:25px 10px;
+    text-align:center;
+    background:#444242;
+}
+
+.header h1{
+    color:#f6ff00;
+    font-size:32px;
+    font-weight:800;
+    letter-spacing:3px;
+    text-shadow:4px 4px #000;
+}
+
+/* Container */
+.container{
+    min-height:calc(100vh - 100px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:60px;
+    padding:20px;
+    flex-wrap:wrap;
+}
+
+/* Login box */
+.login-box{
+    width:420px;
+    max-width:100%;
+    padding:45px;
+    border-radius:18px;
+    background:rgba(255,255,255,0);
+    backdrop-filter: blur(18px);
+    border:1px solid rgba(255,255,255,0.2);
+    box-shadow:0 0 40px rgba(246,255,0,0.35);
+    animation:slideUp 0.9s ease;
+}
+
+@keyframes slideUp{
+    from{opacity:0; transform:translateY(25px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.login-box h2{
+    text-align:center;
+    margin-bottom:30px;
+    color:#f6ff00;
+}
+
+/* Fields */
+.field{
+    position:relative;
+    margin-bottom:22px;
+}
+
+.field input{
+    width:100%;
+    padding:14px 12px;
+    background:transparent;
+    border:none;
+    border-bottom:2px solid rgba(255,255,255,0.3);
+    color:#fff;
+    font-size:16px;
+    outline:none;
+}
+
+.field label{
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#fff;
+    pointer-events:none;
+    transition:0.3s;
+}
+
+.field input:focus + label,
+.field input:valid + label{
+    top:-6px;
+    font-size:13px;
+    color:#f6ff00;
+}
+
+/* Button */
+.login-btn{
+    width:100%;
+    padding:14px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    background:linear-gradient(135deg,#f6ff00,#ffff00);
+    color:#000;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.login-btn:hover{
+    box-shadow:0 0 20px #f6ff00;
+    transform:translateY(-2px);
+}
+
+/* Alerts */
+.alert{
+    margin-top:18px;
+    text-align:center;
+    color:#f6ff00;
+    font-weight:600;
+    min-height:20px;
+}
+
+/* Footer */
+.footer{
+    text-align:center;
+    margin-top:25px;
+    color:#bbb;
+    font-size:13px;
+}
+
+/* Responsive */
+@media (max-width: 900px){
+    .container{flex-direction:column; gap:40px;}
+}
+
+@media (max-width: 480px){
+    .login-box{padding:30px 22px; border-radius:14px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Advanced Attendance Monitoring Dashboard System</h1>
+</div>
+
+<div class="container">
+
+    <!-- Faculty Login -->
+    <div class="login-box">
+        <h2>Admin / Faculty</h2>
+        <div class="field">
+            <input type="email" id="facultyEmail" required>
+            <label>Email Address</label>
+        </div>
+        <div class="field">
+            <input type="password" id="facultyPass" required>
+            <label>Password</label>
+        </div>
+        <button class="login-btn" onclick="LgFaculty()">LOGIN</button>
+        <div id="facultyAlert" class="alert"></div>
+        <div class="footer">AAMDS • Secure Access</div>
+    </div>
+
+    <!-- Student Login -->
+    <div class="login-box">
+        <h2>Student</h2>
+        <div class="field">
+            <input type="text" id="studentRoll" required>
+            <label>Roll No</label>
+        </div>
+        <div class="field">
+            <input type="password" id="studentPass" required>
+            <label>Password</label>
+        </div>
+        <button class="login-btn" onclick="LgStudent()">LOGIN</button>
+        <div id="studentAlert" class="alert"></div>
+        <div class="footer">AAMDS • Secure Access</div>
+    </div>
+
+</div>
+</body>
+</html>

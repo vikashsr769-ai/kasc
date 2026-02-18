@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Faculty – Student DB Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#8800aa;
+  --panel:#161b1b;
+  --panel-soft:#232f3e;
+  --border:#2e3b4e;
+  --text:#ffffff;
+  --muted:#b0b7bd;
+  --accent:#f6ff00;
+  --danger:#ff0000;
+  --radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",Arial,sans-serif;}
+body{ background-image: url("bg.png");
+    background-repeat: no-repeat;
+    background-size:cover;
+  color: var(--text);
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+/* Sidebar */
+.sidebar{background:#131921;padding:28px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.brand{font-size:22px;font-weight:800;color:var(--accent);margin-bottom:40px;}
+.nav a{display:block;padding:14px 18px;border-radius:8px;color:var(--muted);text-decoration:none;margin-bottom:6px;font-size:16px;}
+.nav a.active,.nav a:hover{background: var(--panel-soft); color:#fff;}
+/* Header */
+.header{position:sticky;top:0;background:#0f1111;border-bottom:1px solid var(--border);padding:24px 40px;display:flex;justify-content:space-between;align-items:center;z-index:10;}
+.header h1{font-size:28px;}
+#menuToggle{display:none;font-size:24px;background:none;border:none;color:var(--accent);cursor:pointer;}
+/* Main content */
+.content{padding:40px;}
+.action-btn{background:var(--accent);border:none;color:#111;padding:10px 18px;border-radius:6px;font-weight:700;cursor:pointer;min-width:140px;margin:5px 5px 5px 0;font-size:16px;}
+.action-btn.danger{background: var(--danger);color:#fff;}
+input, select{width:100%;padding:12px;background: var(--panel);border:1px solid var(--border);border-radius:8px;color:#fff;margin-bottom:16px;font-size:14px;}
+/* Table wrapper */
+.table-wrapper{margin-top:30px;overflow-x:auto;}
+.table-header, .table-row{display:grid;grid-template-columns: 2fr 1fr 1fr 2fr 1fr 1.5fr; gap:12px;padding:12px 16px;align-items:center;min-width:1000px;}
+.table-header{font-weight:bold;border-bottom:2px solid var(--accent);background:var(--panel-soft);border-radius:var(--radius);margin-bottom:8px;}
+.table-row{background: var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;transition: all 0.2s ease;}
+.table-row:hover{border-color: var(--accent);transform:translateY(-2px);}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#00000080;display:none;justify-content:center;align-items:center;z-index:1000;}
+.modal-overlay.show{display:flex;}
+.modal{background: var(--panel);padding:30px;border-radius:14px;width:500px;max-width:90%;}
+.modal h2{margin-bottom:20px;}
+.modal-actions{text-align:right;}
+button:hover, select:hover, input:hover{border:1px solid var(--accent);}
+@media(max-width:2000px){
+  body{grid-template-columns:1fr;}
+  .header{flex-direction:column;align-items:flex-start;gap:10px;padding:20px;}
+  .table-header, .table-row{grid-template-columns: repeat(auto-fit,minmax(180px,1fr));gap:8px;min-width:auto;}
+  #menuToggle{display:inline-block;}
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:1000;transform:translateX(-100%);transition:0.3s;}
+  .sidebar.show{transform:translateX(0);}
+  .overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000080;z-index:500;}
+  .overlay.show{display:block;}
+}
+@media(max-width:600px){
+  input, select{font-size:14px;}
+  .action-btn{width:100%;}
+  .table-header, .table-row{grid-template-columns:1fr; gap:6px; padding:10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">FACULTY•CORE</div>
+  <nav class="nav">
+    <a href="faculty.html">Student Attendance</a>
+    <a class="active" href="#">Student DB Management</a>
+  </nav>
+</aside>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Main -->
+<div class="main">
+  <div class="header">
+    <button id="menuToggle" onclick="toggleSidebar()">☰</button>
+    <h1>Student DB Management</h1>
+    <div class="actions">
+      <button class="action-btn" onclick="openNew()">+ Add Student</button>
+      <button class="action-btn danger" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <input placeholder="Search..." oninput="search(this.value)">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <div>Name</div>
+        <div>Roll No</div>
+        <div>Class</div>
+        <div>Department</div>
+        <div>Section</div>
+        <div>Password</div>
+        <div>Actions</div>
+      </div>
+      <div id="list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="modal_title">Add Student</h2>
+    <label>Name</label><input id="d_name">
+    <label>Roll No</label><input id="d_rollno">
+    <label>Class</label>
+    <select id="d_class">
+        <option value="">Select Class</option>
+        <option>UG I Year</option>
+        <option>UG II Year</option>
+        <option>UG III Year</option>
+        <option>PG I Year</option>
+        <option>PG II Year</option>
+    </select>
+    <label>Department</label>
+    <select id="d_department">
+      <option value="">Select Department</option>
+      <option>Department of Tamil (SF)</option>
+      <option>Department of Computer Science (SF)</option>
+    </select>
+    <label>Section</label>
+    <select id="d_section">
+      <option value="">Select Section</option>
+      <option>Main</option>
+      <option>Additional</option>
+    </select>
+    <label>Faculty Email</label>
+    <input id="d_facultyEmail" type="email" readonly>
+    <label>Password</label><input id="d_password" type="password">
+    <div class="modal-actions">
+      <button class="action-btn" onclick="save()">Save</button>
+      <button class="action-btn danger" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase1 = supabase.createClient(
+  "https://fwqcfitjxcopbbedsyzd.supabase.co",
+  "sb_publishable_P1WXJHSWf59fCNC7eN8w7g_5pfoF3V7"
+);
+
+let users=[], filtered=[], current=null, isNew=false;
+const d_name = document.getElementById("d_name");
+const d_rollno = document.getElementById("d_rollno");
+const d_class = document.getElementById("d_class");
+const d_department = document.getElementById("d_department");
+const d_section = document.getElementById("d_section");
+const d_facultyEmail = document.getElementById("d_facultyEmail");
+const d_password = document.getElementById("d_password");
+const modal = document.getElementById("modal");
+const list = document.getElementById("list");
+
+// ✅ Get FacultyEmail from sessionStorage
+const FacultyEmail = sessionStorage.getItem('FacultyEmail') || '';
+
+// Fetch students only for this faculty
+async function fetchData(){
+  const {data,error} = await supabase1
+    .from("StudentAuth")
+    .select("*")
+    .eq("FacultyEmail", FacultyEmail); // ✅ Filter by logged-in faculty
+  if(error){ alert(error.message); return; }
+  users = data || [];
+  filtered = [...users];
+  render();
+}
+
+// Render table
+function render(){
+  list.innerHTML="";
+  filtered.forEach((u,i)=>{
+    list.innerHTML+=`
+    <div class="table-row">
+      <div>${u.Name}</div>
+      <div>${u.RollNo}</div>
+      <div>${u.Class}</div>
+      <div>${u.Department}</div>
+      <div>${u.Section || ''}</div>
+      <div>${u.Password}</div>
+      <div>
+        <button class="action-btn" onclick="edit(${i})">Edit</button>
+        <button class="action-btn danger" onclick="delUser('${u.RollNo}')">Delete</button>
+      </div>
+    </div>`;
+  });
+}
+
+// Modal functions
+function openNew(){ 
+  isNew=true; 
+  modal.classList.add('show'); 
+  clearModal(); 
+  d_facultyEmail.value = FacultyEmail; // auto-fill
+}
+function edit(i){
+  isNew=false; 
+  current=filtered[i];
+  d_name.value=current.Name;
+  d_rollno.value=current.RollNo;
+  d_class.value=current.Class;
+  d_department.value=current.Department;
+  d_section.value=current.Section || '';
+  d_facultyEmail.value = FacultyEmail; // always use logged-in faculty
+  d_password.value=current.Password;
+  modal.classList.add('show');
+}
+function clearModal(){
+  d_name.value=''; d_rollno.value=''; d_class.value='';
+  d_department.value=''; d_section.value=''; d_facultyEmail.value = FacultyEmail; d_password='';
+}
+
+// Save student
+async function save(){
+  const payload={
+    Name: d_name.value.trim(),
+    RollNo: d_rollno.value.trim(),
+    Class: d_class.value.trim(),
+    Department: d_department.value.trim(),
+    Section: d_section.value,
+    FacultyEmail: FacultyEmail, // ✅ Force use of logged-in faculty
+    Password: d_password.value.trim()
+  };
+  if(!payload.Name || !payload.RollNo || !payload.Password){
+    alert("Name, RollNo, and Password required"); return;
+  }
+  if(isNew){
+    await supabase1.from("StudentAuth").insert([payload]);
+  } else{
+    await supabase1.from("StudentAuth").update(payload).eq("id",current.id);
+  }
+  closeModal(); fetchData();
+}
+
+// Delete
+function delUser(roll){
+  if(confirm("Delete student?")){
+    supabase1.from("StudentAuth").delete().eq("RollNo",roll).then(fetchData);
+  }
+}
+
+// Modal & Sidebar
+function closeModal(e){ if(!e || e.target===modal) modal.classList.remove('show'); }
+function logout(){ sessionStorage.clear(); location.href="index.html"; }
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+function toggleSidebar(){ sidebar.classList.toggle('show'); overlay.classList.toggle('show'); }
+function closeSidebar(){ sidebar.classList.remove('show'); overlay.classList.remove('show'); }
+
+// Search
+function search(q){
+  filtered = users.filter(u =>
+    (u.Name.toLowerCase().includes(q.toLowerCase()) ||
+     u.RollNo.toLowerCase().includes(q.toLowerCase()))
+  );
+  render();
+}
+
+fetchData();
+</script>
+</body>
+</html>
